@@ -1,4 +1,23 @@
-import {database,transaction} from '@/lib/database';
-import {bucket,failure} from '@/lib/storage';
+import {failure} from '@/lib/storage';
 import {requireAdmin} from '@/lib/auth';
-export async function DELETE(r:Request,{params}:{params:Promise<{id:string}>}){const denied=requireAdmin(r);if(denied)return denied;try{const {id}=await params;const d=await transaction(async db=>{const row=await db.prepare('SELECT file_key FROM documents WHERE id=? FOR UPDATE').bind(id).first();if(row)await db.prepare('DELETE FROM documents WHERE id=?').bind(id).run();return row});if(!d)return Response.json({error:'Không tìm thấy văn bản.'},{status:404});let warning='';if(d.file_key)try{await bucket().delete(String(d.file_key))}catch{warning='Đã xóa thông tin văn bản. Tệp vẫn còn trong Drive; hãy kiểm tra và dọn sau.'}return Response.json({ok:true,warning})}catch(e){return failure(e)}}
+import {deleteDocument} from '@/lib/delete-document';
+
+export const runtime = 'nodejs';
+export const maxDuration = 60;
+
+export async function DELETE(r: Request, {params}: {params: Promise<{id: string}>}) {
+  const denied = requireAdmin(r);
+  if (denied) return denied;
+  let expectedVersion: string | null = null;
+  const header = r.headers.get('X-Document-Version');
+  if (header !== null) {
+    try {
+      expectedVersion = decodeURIComponent(header);
+      if (!expectedVersion || expectedVersion.length > 100) throw new Error('Invalid version');
+    } catch {return Response.json({error: 'Phiên bản văn bản không hợp lệ.'}, {status: 400})}
+  }
+  try {
+    const {id} = await params;
+    return await deleteDocument(id, expectedVersion);
+  } catch (error) {return failure(error)}
+}

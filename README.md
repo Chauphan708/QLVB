@@ -93,6 +93,17 @@ Lệnh trên chỉ đọc/đếm. Khi sẵn sàng ghi dữ liệu mới, thêm `
 
 Sau chuyển, đối chiếu số văn bản và số tệp, mở mẫu tệp ở cả ba luồng, kiểm tra bộ lọc, hạn hiệu lực, văn bản thay thế, tải CSV/ZIP. Chỉ chuyển người dùng sang địa chỉ mới khi đã đối chiếu. Giữ site cũ trong thời gian kiểm tra.
 
+## Xóa nhiều văn bản
+
+Đăng nhập quản trị tại `/settings`, sau đó quay lại sổ văn bản. Chọn ô trước từng dòng hoặc ô ở đầu bảng để chọn toàn bộ **trang đang xem** (tối đa 100 văn bản). Dùng bộ lọc và số dòng mỗi trang để thu hẹp danh sách trước khi chọn.
+
+Bấm **Xóa đã chọn**, kiểm tra danh sách, số văn bản và số tệp đính kèm, rồi xác nhận. Đổi trang hoặc bộ lọc sẽ bỏ dấu chọn. Văn bản được sửa sau khi chọn sẽ không bị xóa; hãy tải lại và kiểm tra trước khi chọn lại.
+
+Ứng dụng xử lý lần lượt, hiển thị tiến độ và kết quả từng văn bản. Có thể dừng sau mục đang xử lý. Nếu hết phiên đăng nhập, mất kết nối hoặc kết quả không xác định, các mục còn lại chưa được gửi để xóa. Không tự động thử lại yêu cầu có kết quả chưa rõ.
+
+Thông tin văn bản bị xóa khỏi Supabase; tệp được chuyển vào Thùng rác Drive sau khi giao dịch dữ liệu thành công. Nếu Drive lỗi, kết quả có cảnh báo và đường dẫn kiểm tra tệp. Thao tác xóa thông tin không có chức năng hoàn tác trong phần mềm.
+
+
 ## 7. Kiểm tra và vận hành
 
 ```sh

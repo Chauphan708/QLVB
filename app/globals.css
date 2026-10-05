@@ -21,3 +21,23 @@
 
 .register-actions{display:flex;gap:8px;flex-wrap:wrap}.zip-dialog{max-height:90vh;overflow-y:auto}.zip-label{display:grid;gap:8px;font-size:14px}.zip-help{font-size:14px;line-height:1.6;color:#526477;margin:12px 0}.zip-parts{display:grid;gap:8px;max-height:34vh;overflow-y:auto}.zip-part{display:flex;gap:10px;padding:12px;justify-content:flex-start;text-decoration:none}.zip-part small{display:block;font-size:13px;font-weight:400}.zip-error{color:#b42318;font-size:14px}@media(max-width:700px){.section-head{flex-wrap:wrap}.register-actions{width:100%}}
 
+
+/* Selection is limited to the current page, up to 100 documents. */
+.doc-table.selectable th:first-child,.doc-table.selectable td:first-child{width:52px;min-width:52px;padding:12px 14px 12px 23px}
+.doc-table.selectable th:nth-child(2){width:46%}
+.doc-table.selectable tr[data-state=selected] td{background:#f0f5ff}
+.selection-cell [data-slot=checkbox]{width:20px;height:20px}
+.bulk-toolbar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:12px 23px;border-top:1px solid #dce6f4;background:#f0f5ff;font-size:14px}
+.bulk-toolbar>span{margin-right:auto}
+.bulk-dialog{max-height:90vh;overflow-y:auto;max-width:620px}
+.bulk-review{list-style:none;margin:0;padding:0;max-height:40vh;overflow-y:auto;border:1px solid #e0e6ef;border-radius:7px}
+.bulk-review li{padding:12px 14px;border-bottom:1px solid #e0e6ef;overflow-wrap:anywhere;font-size:14px}
+.bulk-review li:last-child{border-bottom:0}
+.bulk-review strong,.bulk-review span{display:block}
+.bulk-review span{color:#526477;margin-top:3px}
+.bulk-review a{display:inline-block;margin-top:5px;color:#2456d9;text-decoration:underline}
+.bulk-result{margin-top:7px;color:#92500b}
+.bulk-result.deleted{color:#23653d}
+.bulk-result.failed,.bulk-result.unknown{color:#b42318}
+@media(max-width:600px){.bulk-toolbar{padding:12px 16px}.doc-table.selectable th:first-child,.doc-table.selectable td:first-child{padding-left:16px}}
+
