@@ -18,7 +18,7 @@ CREATE INDEX idx_documents_status_due ON public.documents(status,due);
 CREATE INDEX idx_documents_expiry ON public.documents(expires_on);
 CREATE UNIQUE INDEX idx_documents_file_key ON public.documents(file_key) WHERE file_key IS NOT NULL;
 CREATE TABLE public.app_settings (key text PRIMARY KEY,value text NOT NULL);
-CREATE TABLE public.pending_uploads (id text PRIMARY KEY,document_id text NOT NULL,drive_id text NOT NULL UNIQUE,file_name text NOT NULL,file_size integer NOT NULL CHECK(file_size BETWEEN 1 AND 10485760),created_at timestamptz NOT NULL DEFAULT now());
+CREATE TABLE public.pending_uploads (id text PRIMARY KEY,document_id text NOT NULL,drive_id text NOT NULL UNIQUE,file_name text NOT NULL,file_size integer NOT NULL CONSTRAINT pending_uploads_file_size_check CHECK(file_size BETWEEN 1 AND 104857600),created_at timestamptz NOT NULL DEFAULT now());
 CREATE TABLE public.login_attempts (key text PRIMARY KEY,attempts integer NOT NULL,window_start timestamptz NOT NULL DEFAULT now());
 ALTER TABLE public.documents ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.app_settings ENABLE ROW LEVEL SECURITY;

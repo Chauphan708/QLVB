@@ -5,6 +5,7 @@ import {attachmentMetadata,getDriveConnection,bucket} from './drive';
 import {failure} from './storage';
 import {categories,normalize} from './documents';
 import {validDate} from './document-query';
+import {isAllowedUploadSize,UPLOAD_SIZE_ERROR} from './upload-limits';
 const fields=['direction','number','title','organization','issuing_body','issued','received','category','assignee','due','urgency','status','notes','expires_on','replaced_by'];
 type Pending={id:string;document_id:string;drive_id:string;file_name:string;file_size:number};
 class SaveError extends Error{constructor(message:string,public status=400){super(message)}}
@@ -17,7 +18,7 @@ export async function saveDocument(r:Request){const denied=requireAdmin(r);if(de
  if(v.replaced_by&&normalize(v.replaced_by)===normalize(v.number))throw new SaveError('Văn bản thay thế phải khác số ký hiệu của văn bản này.');
  const edit=String(form.get('id')||''),id=edit||String(form.get('new_id')||randomUUID()),uploadId=String(form.get('upload_id')||'');if(!/^[-\w]{1,100}$/.test(id))throw new SaveError('Mã văn bản không hợp lệ.');
  let pending:Pending|undefined;
- if(uploadId){pending=await database().prepare("SELECT * FROM pending_uploads WHERE id=? AND created_at>now()-interval '1 day'").bind(uploadId).first<Pending>();if(!pending||pending.document_id!==id)throw new SaveError('Phiên tải tệp hết hạn hoặc không thuộc văn bản này.');const [meta,drive]=await Promise.all([attachmentMetadata(pending.drive_id),getDriveConnection()]);if(meta.trashed||Number(meta.size)!==pending.file_size||meta.appProperties?.upload_id!==uploadId||!meta.parents?.includes(drive.folderId))throw new SaveError('Drive chưa có tệp hoàn chỉnh hoặc tệp không thuộc thư mục đã kết nối.');}
+ if(uploadId){pending=await database().prepare("SELECT * FROM pending_uploads WHERE id=? AND created_at>now()-interval '1 day'").bind(uploadId).first<Pending>();if(!pending||pending.document_id!==id)throw new SaveError('Phiên tải tệp hết hạn hoặc không thuộc văn bản này.');if(!isAllowedUploadSize(pending.file_size))throw new SaveError(UPLOAD_SIZE_ERROR);const [meta,drive]=await Promise.all([attachmentMetadata(pending.drive_id),getDriveConnection()]);if(meta.trashed||Number(meta.size)!==pending.file_size||meta.appProperties?.upload_id!==uploadId||!meta.parents?.includes(drive.folderId))throw new SaveError('Drive chưa có tệp hoàn chỉnh hoặc tệp không thuộc thư mục đã kết nối.');}
  let oldKey:string|null=null;
  await transaction(async db=>{
   const old=await db.prepare('SELECT * FROM documents WHERE id=? FOR UPDATE').bind(id).first();

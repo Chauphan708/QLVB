@@ -22,6 +22,12 @@ Bản mã nguồn độc lập chuyển từ site Văn thư. Giữ sổ đến/�
 4. Kết nối chỉ chạy trên máy chủ. Các bảng bật RLS và thu hồi quyền `anon`/`authenticated`. Không dùng URL này trong biến `NEXT_PUBLIC_*`.
 5. TLS kiểm tra chứng chỉ mặc định. Nếu cần CA của Supabase, tải certificate trong dashboard và đặt vào `DATABASE_CA_CERT` (xuống dòng bằng `\n`). Không tắt xác minh TLS cho production.
 
+### Nâng giới hạn tệp lên 100 MB cho dự án đang dùng
+
+Nếu đã tạo bảng trước bản nâng cấp này, mở Supabase **SQL Editor** và chạy `supabase/migrations/002_upload_limit_100mb.sql`. Không chạy lại `001_initial.sql` trên database đang có bảng. Câu lệnh nâng giới hạn ràng buộc từ 10 lên 100 MB; không xóa văn bản hay tệp. Có thể chạy lại an toàn.
+
+Dự án mới chỉ cần chạy `001_initial.sql`, đã có giới hạn 100 MB. Sau khi cập nhật database và triển khai mã nguồn mới, thử tải một tệp lớn hơn 10 MB. Tệp tối đa 100 MB (104.857.600 byte); tệp rỗng hoặc vượt giới hạn sẽ bị từ chối. Tổng dung lượng còn phụ thuộc Drive của tài khoản kết nối.
+
 ## 2. Cài và chạy máy cá nhân
 
 Cần Node.js 22.13 trở lên (khuyến nghị Node 24) và npm. Trong thư mục chứa package.json:
