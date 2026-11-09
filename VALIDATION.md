@@ -6,7 +6,7 @@ Bản nâng cấp toàn diện đã hoàn tất với các tiêu chuẩn kiểm 
 
 - **`npm install`**: Đã cài đặt hoàn tất toàn bộ cây phụ thuộc 513 packages trên Node.js v24.16.0.
 - **`npm run typecheck`**: `tsc --noEmit` đạt 0 lỗi trên toàn bộ các tệp TypeScript và React component.
-- **`npm test`**: **25/25 bài kiểm tra chạy thành công 100%** (1 bài skip dành riêng cho disposable CI database).
+- **`npm test`**: **27/27 bài kiểm tra chạy thành công 100%** (1 bài skip dành riêng cho disposable CI database).
   - Kiểm tra SQL parameterization không làm hỏng string literals.
   - Chữ ký phiên admin, chặn expired session và cross-origin writes.
   - Mã hóa AES-256-GCM token Google Drive.
@@ -21,34 +21,41 @@ Bản nâng cấp toàn diện đã hoàn tất với các tiêu chuẩn kiểm 
   - Bộ lọc định dạng xem trước trực tiếp (`isPreviewable`: PDF, PNG, JPG, WEBP).
   - Định dạng dung lượng tệp (`formatBytes`).
   - Gợi ý tự động số ký hiệu văn bản tiếp theo theo từng năm và loại văn bản (`suggestNextNumber`).
-- **`npm run build`**: Bản dựng production của Next.js hoàn tất thành công, tạo ra 14 route tĩnh và động tối ưu.
+  - Cấu hình in ấn bền vững (Tên trường, Hiệu trưởng, Văn thư, Cơ quan chủ quản) (`defaultPrintConfig`).
+  - Xuất Excel bảng in chuẩn Nghị định 30/2020/NĐ-CP kèm UTF-8 BOM, borders, tiêu đề và khối chữ ký (`generateRegistryExcel`).
+- **`npm run build`**: Bản dựng production của Next.js hoàn tất thành công, tạo ra 15 route tĩnh và động tối ưu (bao gồm `/api/settings/print`).
 
 ## 2. Các tính năng nâng cấp mới được tích hợp
 
 1. **Xem trước tệp trực tiếp trong ứng dụng (`app/file-preview-dialog.tsx`)**:
    - Cho phép xem trực tiếp tệp PDF và ảnh (PNG, JPG, WEBP, GIF) ngay trong Sheet chi tiết mà không cần tải về máy.
    - Hỗ trợ mở tab mới và nút tải về truyền thống.
-2. **In sổ văn bản chuẩn Nghị định 30/2020/NĐ-CP (`app/print-registry.tsx`)**:
+2. **In sổ văn bản chuẩn Nghị định 30/2020/NĐ-CP & Xuất Excel mẫu in (`app/print-registry.tsx` & `lib/excel-export.ts`)**:
    - Biểu mẫu in A4 ngang chuẩn công tác văn thư nhà nước (có quốc hiệu, tiêu ngữ, tên trường, niên khóa, chữ ký người vào sổ và Hiệu trưởng).
    - Tự động thay đổi tiêu đề theo luồng (Sổ văn bản đến, Sổ văn bản đi, Sổ văn bản nội bộ).
    - Tích hợp `@media print` in sắc nét trực tiếp ra máy in hoặc lưu tệp PDF.
-3. **Bộ lọc theo Người xử lý (Assignee Filter)**:
+   - **Nút Xuất Excel mẫu in**: Xuất tệp bảng tính Excel (`.xls`) định dạng khớp 100% với trang in ấn, đầy đủ phần tiêu ngữ, tên cơ quan, bảng dữ liệu có viền nét đơn, căn lề tự động, định dạng chuỗi số văn bản tránh mất số 0 và hai khối chữ ký cuối trang.
+3. **Cài đặt thông tin in ấn 1 lần cho toàn hệ thống (`lib/print-config.ts` & `/api/settings/print`)**:
+   - Cho phép cấu hình: Tên trường, Tên Hiệu trưởng, Tên cán bộ văn thư, Cơ quan chủ quản, Bộ phận văn thư.
+   - Lưu trữ tập trung trong bảng `app_settings` (Supabase) và đồng bộ trình duyệt (`localStorage`) — cài đặt 1 lần dùng mãi mãi cho toàn bộ người dùng.
+   - Cho phép cập nhật linh hoạt tại trang Quản trị (`/settings`) hoặc ngay trong giao diện In sổ.
+4. **Bộ lọc theo Người xử lý (Assignee Filter)**:
    - Thêm dropdown chọn cán bộ/giáo viên phụ trách trên thanh công cụ.
    - Tự động lấy danh sách người xử lý duy nhất từ database.
-4. **Vùng kéo - thả tệp đính kèm hiện đại (`app/file-dropzone.tsx`)**:
+5. **Vùng kéo - thả tệp đính kèm hiện đại (`app/file-dropzone.tsx`)**:
    - Thay thế input file truyền thống bằng vùng Dropzone kéo thả mượt mà.
    - Kiểm tra định dạng và dung lượng tức thời trước khi tải lên.
    - Hiển thị badge loại tệp (PDF, Word, Excel, Ảnh), dung lượng và thanh tiến trình % tải lên Drive.
-5. **Gợi ý tự động Số ký hiệu văn bản tiếp theo (`lib/number-helper.ts`)**:
+6. **Gợi ý tự động Số ký hiệu văn bản tiếp theo (`lib/number-helper.ts`)**:
    - Tự động phân tích các văn bản đã ban hành trong năm để gợi ý số kế tiếp (VD: `13/CV-TH`, `03/QĐ-TH`).
    - Nút bấm 1 chạm điền nhanh vào form thêm văn bản.
-6. **Quản trị dung lượng Google Drive & Dọn dẹp tệp tải dở (`app/settings/page.tsx` & `lib/drive.ts`)**:
+7. **Quản trị dung lượng Google Drive & Dọn dẹp tệp tải dở (`app/settings/page.tsx` & `lib/drive.ts`)**:
    - Hiển thị thanh dung lượng Google Drive cá nhân (đã dùng, còn trống, phần trăm).
    - Công cụ bấm dọn dẹp các tệp tạm dở dang > 24 giờ vào Thùng rác Drive.
-7. **Nhật ký thao tác văn bản (`supabase/migrations/003_audit_log.sql` & `lib/audit-log.ts`)**:
+8. **Nhật ký thao tác văn bản (`supabase/migrations/003_audit_log.sql` & `lib/audit-log.ts`)**:
    - Ghi nhận lịch sử: Tạo mới, Cập nhật thông tin/tệp, Đổi trạng thái xử lý, Xóa.
    - Hiển thị dòng thời gian trực quan ngay trong Sheet chi tiết văn bản.
-8. **Nhãn đếm ngược thời hạn thông minh (`dueInfo`)**:
+9. **Nhãn đếm ngược thời hạn thông minh (`dueInfo`)**:
    - Cảnh báo trực quan trên bảng danh sách: `Quá hạn X ngày`, `Hôm nay đến hạn`, `Đến hạn ngày mai`, `Còn X ngày`.
 
 ## 3. Hướng dẫn trước khi vận hành thực tế

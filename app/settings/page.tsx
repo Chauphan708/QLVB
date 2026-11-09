@@ -2,6 +2,7 @@
 
 import './settings.css';
 import {useEffect, useState} from 'react';
+import type {PrintConfig} from '@/lib/print-config';
 
 type Quota = {
   limit?: number;
@@ -30,11 +31,32 @@ export default function Settings() {
   const [cleanupResult, setCleanupResult] = useState<string | null>(null);
   const [cleaning, setCleaning] = useState(false);
 
+  // Print Settings State
+  const [printConfig, setPrintConfig] = useState<PrintConfig>({
+    schoolName: 'TRƯỜNG HỌC',
+    department: 'VĂN PHÒNG NHÀ TRƯỜNG',
+    parentOrg: '',
+    principalName: '',
+    clerkName: '',
+  });
+  const [savingPrint, setSavingPrint] = useState(false);
+  const [printSaveMsg, setPrintSaveMsg] = useState('');
+
   async function load() {
     try {
       const r = await fetch('/api/admin/session', {cache: 'no-store'});
       if (!r.ok) throw new Error('Không đọc được trạng thái kết nối.');
-      setStatus(await r.json());
+      const data = await r.json();
+      setStatus(data);
+
+      if (data.admin) {
+        // Load print config
+        const pr = await fetch('/api/settings/print', {cache: 'no-store'});
+        if (pr.ok) {
+          const cfg = await pr.json();
+          if (cfg?.schoolName) setPrintConfig(cfg);
+        }
+      }
     } catch (e) {
       setMessage(e instanceof Error ? e.message : 'Không tải được cấu hình.');
     }
@@ -98,6 +120,30 @@ export default function Settings() {
     }
   }
 
+  async function handleSavePrintConfig(e: React.FormEvent) {
+    e.preventDefault();
+    setSavingPrint(true);
+    setPrintSaveMsg('');
+    try {
+      const r = await fetch('/api/settings/print', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify(printConfig),
+      });
+      const d = await r.json();
+      if (!r.ok) throw new Error(d.error || 'Không lưu được cài đặt.');
+      try {
+        localStorage.setItem('vanthu_print_config', JSON.stringify(printConfig));
+      } catch {}
+      setPrintSaveMsg('✅ Đã lưu thông tin in ấn thành công! Áp dụng mặc định cho tất cả các lần in và xuất Excel.');
+      setTimeout(() => setPrintSaveMsg(''), 5000);
+    } catch (e) {
+      setPrintSaveMsg('❌ ' + (e instanceof Error ? e.message : 'Lỗi lưu thông tin.'));
+    } finally {
+      setSavingPrint(false);
+    }
+  }
+
   const quota = status?.quota;
   const usagePercent = quota?.limit ? Math.min(100, Math.round((quota.usage / quota.limit) * 100)) : 0;
 
@@ -132,6 +178,83 @@ export default function Settings() {
         </form>
       ) : (
         <>
+          {/* CẤU HÌNH IN ẤN VÀ TÊN TRƯỜNG, HIỆU TRƯỞNG */}
+          <section className="settings-section">
+            <h2>Cài đặt thông tin In ấn & Sổ văn thư</h2>
+            <p>
+              Cài đặt tên trường, tên hiệu trưởng và bộ phận văn thư <strong>1 lần duy nhất</strong>. Thông tin này sẽ tự động hiển thị trên biểu mẫu in sổ và file Excel tải về.
+            </p>
+
+            <form onSubmit={handleSavePrintConfig} className="print-config-form">
+              <label>
+                <span>Cơ quan cấp trên quản lý (tùy chọn):</span>
+                <input
+                  type="text"
+                  value={printConfig.parentOrg}
+                  onChange={(e) => setPrintConfig({...printConfig, parentOrg: e.target.value})}
+                  placeholder="VD: PHÒNG GIÁO DỤC VÀ ĐÀO TẠO QUẬN NINH KIỀU"
+                  maxLength={150}
+                />
+              </label>
+
+              <label>
+                <span>Tên trường học *:</span>
+                <input
+                  type="text"
+                  value={printConfig.schoolName}
+                  onChange={(e) => setPrintConfig({...printConfig, schoolName: e.target.value})}
+                  placeholder="VD: TRƯỜNG TIỂU HỌC TRẦN VĂN ƠN"
+                  maxLength={150}
+                  required
+                />
+              </label>
+
+              <label>
+                <span>Bộ phận vào sổ *:</span>
+                <input
+                  type="text"
+                  value={printConfig.department}
+                  onChange={(e) => setPrintConfig({...printConfig, department: e.target.value})}
+                  placeholder="VD: BỘ PHẬN VĂN THƯ - VĂN PHÒNG"
+                  maxLength={150}
+                  required
+                />
+              </label>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <label>
+                  <span>Họ và tên Hiệu trưởng / Thủ trưởng đơn vị:</span>
+                  <input
+                    type="text"
+                    value={printConfig.principalName}
+                    onChange={(e) => setPrintConfig({...printConfig, principalName: e.target.value})}
+                    placeholder="VD: Thầy Nguyễn Văn A"
+                    maxLength={100}
+                  />
+                </label>
+
+                <label>
+                  <span>Họ và tên Cán bộ Văn thư:</span>
+                  <input
+                    type="text"
+                    value={printConfig.clerkName}
+                    onChange={(e) => setPrintConfig({...printConfig, clerkName: e.target.value})}
+                    placeholder="VD: Cô Trần Thị B"
+                    maxLength={100}
+                  />
+                </label>
+              </div>
+
+              {printSaveMsg && <p className="cleanup-result mt-2">{printSaveMsg}</p>}
+
+              <div className="settings-btn-group">
+                <button type="submit" className="primary" disabled={savingPrint}>
+                  {savingPrint ? 'Đang lưu…' : 'Lưu thông tin in ấn'}
+                </button>
+              </div>
+            </form>
+          </section>
+
           <section className="settings-section">
             <h2>Cơ sở dữ liệu Supabase</h2>
             <p>

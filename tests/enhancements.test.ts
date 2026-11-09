@@ -3,6 +3,8 @@ import assert from 'node:assert/strict';
 import {dueInfo, isPreviewable, formatBytes, today, type Doc} from '../lib/documents';
 import {suggestNextNumber} from '../lib/number-helper';
 import {documentQuery, FilterError} from '../lib/document-query';
+import {defaultPrintConfig, type PrintConfig} from '../lib/print-config';
+import {generateRegistryExcel} from '../lib/excel-export';
 
 const sampleDoc = (overrides: Partial<Doc> = {}): Doc => ({
   id: 'test-1',
@@ -107,4 +109,83 @@ test('documentQuery safely filters by assignee and rejects invalid parameters', 
     () => documentQuery(new URL('https://x/?assignee=' + 'A'.repeat(250))),
     FilterError
   );
+});
+
+test('defaultPrintConfig provides sane defaults', () => {
+  assert.ok(defaultPrintConfig.schoolName.length > 0);
+  assert.ok(defaultPrintConfig.department.length > 0);
+  assert.equal(typeof defaultPrintConfig.principalName, 'string');
+  assert.equal(typeof defaultPrintConfig.clerkName, 'string');
+});
+
+test('generateRegistryExcel generates valid formatted Excel HTML with BOM and headers', () => {
+  const customConfig: PrintConfig = {
+    schoolName: 'TRƯỜNG THCS NGUYỄN DU',
+    department: 'VĂN THƯ TRƯỜNG',
+    parentOrg: 'PHÒNG GD&ĐT QUẬN 1',
+    principalName: 'Nguyễn Văn Hiệu Trưởng',
+    clerkName: 'Lê Thị Văn Thư',
+  };
+
+  const docs: Doc[] = [
+    sampleDoc({
+      direction: 'in',
+      number: '45/PGD-TH',
+      title: 'V/v kiểm tra công tác văn thư lưu trữ',
+      organization: 'Phòng GD&ĐT',
+      assignee: 'Cô Mai',
+      issued: '2026-03-01',
+      received: '2026-03-02',
+      due: '2026-03-10',
+      notes: 'Khẩn',
+    }),
+  ];
+
+  // Test Inbound Document Register Excel
+  const excelIn = generateRegistryExcel({
+    docs,
+    view: 'in',
+    direction: 'in',
+    from: '2026-03-01',
+    to: '2026-03-31',
+    config: customConfig,
+    yearNote: 'Năm học 2025 - 2026',
+  });
+
+  // Verify UTF-8 BOM
+  assert.ok(excelIn.startsWith('\uFEFF'));
+  // Verify document type title & metadata
+  assert.match(excelIn, /SỔ ĐĂNG KÝ VĂN BẢN ĐẾN/);
+  assert.match(excelIn, /TRƯỜNG THCS NGUYỄN DU/);
+  assert.match(excelIn, /PHÒNG GD(&amp;|&)ĐT QUẬN 1/);
+  assert.match(excelIn, /Nguyễn Văn Hiệu Trưởng/);
+  assert.match(excelIn, /Lê Thị Văn Thư/);
+  assert.match(excelIn, /Từ ngày 01\/03\/2026 đến ngày 31\/03\/2026/);
+  assert.match(excelIn, /Năm học 2025 - 2026/);
+  // Verify table data
+  assert.match(excelIn, /45\/PGD-TH/);
+  assert.match(excelIn, /V\/v kiểm tra công tác văn thư lưu trữ/);
+  assert.match(excelIn, /Cô Mai/);
+
+  // Test Outbound Document Register Excel
+  const docsOut: Doc[] = [
+    sampleDoc({
+      direction: 'out',
+      number: '05/BC-ND',
+      title: 'Báo cáo tổng kết quý 1',
+      organization: 'Sở GD&ĐT',
+      issued: '2026-03-15',
+    }),
+  ];
+
+  const excelOut = generateRegistryExcel({
+    docs: docsOut,
+    view: 'out',
+    direction: 'out',
+    config: customConfig,
+  });
+
+  assert.match(excelOut, /SỔ ĐĂNG KÝ VĂN BẢN ĐI/);
+  assert.match(excelOut, /05\/BC-ND/);
+  assert.match(excelOut, /Báo cáo tổng kết quý 1/);
 });

@@ -109,6 +109,17 @@ Bấm **Xóa đã chọn**, kiểm tra danh sách, số văn bản và số tệ
 
 Thông tin văn bản bị xóa khỏi Supabase; tệp được chuyển vào Thùng rác Drive sau khi giao dịch dữ liệu thành công. Nếu Drive lỗi, kết quả có cảnh báo và đường dẫn kiểm tra tệp. Thao tác xóa thông tin không có chức năng hoàn tác trong phần mềm.
 
+## In ấn sổ văn thư (Nghị định 30/2020/NĐ-CP) & Xuất Excel mẫu in
+
+1. **Cài đặt thông tin in ấn 1 lần cho tất cả**:
+   - Truy cập trang **Cài đặt** (`/settings`) hoặc mở trực tiếp trên cửa sổ **In sổ**:
+   - Nhập thông tin: **Tên cơ quan chủ quản** (Phòng/Sở GD&ĐT), **Tên trường**, **Bộ phận văn thư**, **Họ và tên Hiệu trưởng**, **Họ và tên Người vào sổ (Văn thư)**.
+   - Bấm **Lưu cài đặt in ấn**: Dữ liệu được lưu vĩnh viễn vào bảng `app_settings` trên Supabase (đồng thời lưu vào trình duyệt `localStorage`) để toàn bộ giáo viên và văn thư sử dụng chung một lần mà không cần cấu hình lại mỗi lần in.
+2. **In sổ văn bản & Xuất file Excel**:
+   - Tại màn hình chính, lọc danh sách văn bản cần in (hoặc chọn khoảng ngày) rồi bấm nút **In sổ**.
+   - **In trực tiếp / Lưu PDF**: Bấm **In sổ ngay (Ctrl+P)**, trang in thiết kế chuẩn khổ giấy A4 ngang với đầy đủ Quốc hiệu, Tiêu ngữ, Tên trường, bảng phân cột theo Nghị định 30/2020/NĐ-CP và khung ký tên của Văn thư & Hiệu trưởng.
+   - **Xuất Excel mẫu in**: Bấm **Xuất Excel mẫu in**, hệ thống tự sinh tệp Excel (`.xls`) tương thích 100% với Microsoft Excel, Google Sheets, LibreOffice giữ nguyên tiêu đề, căn giữa, khung viền bảng, định dạng chuỗi số văn bản tránh bị mất số 0 đầu, và khối chữ ký cuối trang.
+
 
 ## 7. Kiểm tra và vận hành
 
