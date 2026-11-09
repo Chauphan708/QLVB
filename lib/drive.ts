@@ -8,3 +8,45 @@ export async function driveFetch(path:string,init:RequestInit={},token?:string){
 export async function driveJson(path:string,init:RequestInit={},token?:string){const r=await driveFetch(path,init,token);if(!r.ok)throw new Error(`Google Drive trả về lỗi ${r.status}.`);return r.json()}
 export async function attachmentMetadata(id:string){return driveJson('drive/v3/files/'+encodeURIComponent(id)+'?fields=id,name,size,parents,trashed,appProperties') as Promise<{id:string;name:string;size:string;parents?:string[];trashed:boolean;appProperties?:Record<string,string>}>}
 export function bucket(){return {async get(id:string){const r=await driveFetch('drive/v3/files/'+encodeURIComponent(id)+'?alt=media');if(r.status===404)return null;if(!r.ok||!r.body)throw new Error(`Không tải được tệp từ Drive (${r.status}).`);return {body:r.body}},async delete(id:string){const r=await driveFetch('drive/v3/files/'+encodeURIComponent(id),{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({trashed:true})});if(!r.ok&&r.status!==404)throw new Error('Không chuyển được tệp cũ vào Thùng rác Drive.')}}}
+
+export type DriveQuota = {
+  limit?: number;
+  usage: number;
+  usageInDrive: number;
+  usageInDriveTrash: number;
+};
+
+export async function driveQuota(): Promise<DriveQuota | null> {
+  try {
+    const data = await driveJson('drive/v3/about?fields=storageQuota') as {storageQuota?: {limit?: string; usage?: string; usageInDrive?: string; usageInDriveTrash?: string}};
+    const q = data.storageQuota;
+    if (!q) return null;
+    return {
+      limit: q.limit ? Number(q.limit) : undefined,
+      usage: Number(q.usage || 0),
+      usageInDrive: Number(q.usageInDrive || 0),
+      usageInDriveTrash: Number(q.usageInDriveTrash || 0),
+    };
+  } catch {
+    return null;
+  }
+}
+
+export async function cleanupPendingUploads(): Promise<{cleaned: number; errors: number}> {
+  const expired = await database().prepare(
+    "SELECT id, drive_id FROM pending_uploads WHERE created_at < now() - interval '1 day'"
+  ).all<{id: string; drive_id: string}>();
+  let cleaned = 0;
+  let errors = 0;
+  for (const item of expired.results) {
+    try {
+      await bucket().delete(item.drive_id);
+    } catch {
+      errors++;
+    }
+    await database().prepare('DELETE FROM pending_uploads WHERE id=?').bind(item.id).run();
+    cleaned++;
+  }
+  return {cleaned, errors};
+}
+

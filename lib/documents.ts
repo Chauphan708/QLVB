@@ -17,3 +17,38 @@ export function validityKey(d:Pick<Doc,'expires_on'|'replaced_by'>){return d.rep
 export const validityOptions:Record<string,string>={expired:'Đã hết hiệu lực',replaced:'Đã bị thay thế',dated:'Chưa đến ngày hết hiệu lực',unknown:'Chưa xác định'};
 export function validityLabel(d:Pick<Doc,'expires_on'|'replaced_by'>){return validityOptions[validityKey(d)]}
 
+export type DueBadgeInfo = {
+  text: string;
+  className: string;
+  daysDiff?: number;
+};
+
+export function dueInfo(d: Doc): DueBadgeInfo {
+  if (d.status === 'done') return {text: 'Đã hoàn thành', className: 'done'};
+  if (!d.due) return {text: 'Không có hạn', className: 'none'};
+  const t = today();
+  if (d.due === t) return {text: 'Hôm nay đến hạn', className: 'today', daysDiff: 0};
+  const dueTime = new Date(d.due + 'T00:00:00+07:00').getTime();
+  const todayTime = new Date(t + 'T00:00:00+07:00').getTime();
+  const diffDays = Math.round((dueTime - todayTime) / (1000 * 60 * 60 * 24));
+  if (diffDays < 0) {
+    return {text: `Quá hạn ${Math.abs(diffDays)} ngày`, className: 'late', daysDiff: diffDays};
+  }
+  if (diffDays === 1) {
+    return {text: 'Đến hạn ngày mai', className: 'urgent', daysDiff: 1};
+  }
+  return {text: `Còn ${diffDays} ngày`, className: 'upcoming', daysDiff: diffDays};
+}
+
+export function isPreviewable(fileName: string | null | undefined): boolean {
+  if (!fileName) return false;
+  return /\.(pdf|png|jpe?g|gif|webp)$/i.test(fileName);
+}
+
+export function formatBytes(bytes: number | null | undefined): string {
+  if (!bytes || bytes <= 0) return '0 B';
+  if (bytes < 1024) return bytes + ' B';
+  if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+  return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+}
+
